@@ -106,12 +106,37 @@ t.test(formula = dCt ~ group, data = df)
 
 summary(lm(dCt ~ group, data = df))
 
+pcr_test(ct4, 
+         group_var = group_var,
+         reference_gene = 'ref',
+         reference_group = 'control',
+         test = "lm")
+
+###
 df = ct4 %>%
-  mutate(group = group_var,
-         run = factor(rep(c(1:3), 8))) %>%
+  mutate(group = group_var) %>%
   pivot_longer(c(ref, target), names_to = "gene", values_to = "Ct")
 
 df
 
 summary(lm(Ct ~ group * gene, data = df))
+```
+
+
+```{r}
+df = read_xlsx("ct4.xlsx")
+
+df
+
+df1 = df %<>%
+  mutate(dCt = Target - Reference)
+
+t.test(dCt ~ Group, data = df1)
+
+wilcox.test(dCt ~ Group, data = df1)
+
+df2 = df %>%
+  pivot_longer(c(Target, Reference), names_to = "Gene", values_to = "Ct")
+
+summary(lmer(Ct ~ Gene*Group + Concentration + (1 | Sample), data = df2))
 ```
