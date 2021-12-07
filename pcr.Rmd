@@ -124,7 +124,8 @@ t.test(dCt ~ Group, data = df1)
 wilcox.test(dCt ~ Group, data = df1)
 
 df2 = df %>%
-  pivot_longer(c(Target, Reference), names_to = "Gene", values_to = "Ct")
+  pivot_longer(c(Target, Reference), names_to = "Gene", values_to = "Ct") %>%
+  mutate(Gene = fct_relevel(Gene, "Target"))
 
 fit = lmer(Ct ~ Gene*Group + Concentration + (1 | Sample), data = df2)
 
