@@ -43,9 +43,32 @@ pcr_analyze(ct1,
   reference_gene = 'GAPDH',
   reference_group = 'brain')
 
-ct1 %>%
-  mutate(group = group_var) %>%
-  group_by(group) %>%
+# run stat tests
+pcr_test(ct1, 
+         group_var = group_var,
+         reference_gene = 'GAPDH',
+         reference_group = 'brain',
+         test = "t.test")
+
+pcr_test(ct1, 
+         group_var = group_var,
+         reference_gene = 'GAPDH',
+         reference_group = 'brain',
+         test = "wilcox.test")
+
+pcr_test(ct1, 
+         group_var = group_var,
+         reference_gene = 'GAPDH',
+         reference_group = 'brain',
+         test = "lm")
+```
+
+```{r}
+ct1 %<>% mutate(group = group_var)
+
+ct1
+
+ct1 %>% group_by(group) %>%
   summarize(c_myc.mean = mean(c_myc),
             c_myc.sd = sd(c_myc),
             GAPDH.mean = mean(GAPDH),
@@ -70,8 +93,32 @@ pcr_analyze(ct2,
   reference_group = 'brain',
   mode = 'same_tube')
 
+# run stat tests
+pcr_test(ct2, 
+         group_var = group_var,
+         reference_gene = 'GAPDH',
+         reference_group = 'brain',
+         test = "t.test")
+
+pcr_test(ct2, 
+         group_var = group_var,
+         reference_gene = 'GAPDH',
+         reference_group = 'brain',
+         test = "wilcox.test")
+
+pcr_test(ct2, 
+         group_var = group_var,
+         reference_gene = 'GAPDH',
+         reference_group = 'brain',
+         test = "lm")
+```
+
+```{r}
+ct2 %<>% mutate(group = group_var)
+
+ct2
+
 ct2 %>%
-  mutate(group = group_var) %>%
   mutate(dct = c_myc - GAPDH) %>%
   group_by(group) %>%
   summarize(dct.mean = mean(dct), dct.sd = sd(dct))
@@ -80,8 +127,6 @@ ct2 %>%
 ```{r}
 # locate and read data
 ct4 = read.csv(system.file('extdata', 'ct4.csv', package = 'pcr'))
-
-ct4
 
 # make group variable
 group_var = rep(c('control', 'treatment'), each = 12)
@@ -92,8 +137,32 @@ pcr_analyze(ct4,
             reference_gene = 'ref',
             reference_group = 'control')
 
+# run stat tests
+pcr_test(ct4, 
+         group_var = group_var,
+         reference_gene = 'ref',
+         reference_group = 'control',
+         test = "t.test")
+
+pcr_test(ct4, 
+         group_var = group_var,
+         reference_gene = 'ref',
+         reference_group = 'control',
+         test = "wilcox.test")
+
+pcr_test(ct4, 
+         group_var = group_var,
+         reference_gene = 'ref',
+         reference_group = 'control',
+         test = "lm")
+```
+
+```{r}
+ct4 %<>% mutate(group = group_var)
+
+ct4
+
 ct4 %>%
-  mutate(group = group_var) %>%
   group_by(group) %>%
   summarize(target.mean = mean(target),
             target.sd = sd(target),
@@ -101,33 +170,16 @@ ct4 %>%
             ref.sd = sd(ref),
             dct.mean = target.mean - ref.mean,
             dct.sd = sqrt(target.sd^2 + ref.sd^2))
-
-pcr_test(ct4, 
-         group_var = group_var,
-         reference_gene = 'ref',
-         reference_group = 'control',
-         test = "lm")
-
 ```
 
+---
 
 ```{r}
 df = read_xlsx("ct4.xlsx")
 
 df
 
-df1 = df %<>%
-  mutate(dCt = Target - Reference)
-
-t.test(dCt ~ Group, data = df1)
-
-wilcox.test(dCt ~ Group, data = df1)
-
-df2 = df %>%
-  pivot_longer(c(Target, Reference), names_to = "Gene", values_to = "Ct") %>%
-  mutate(Gene = fct_relevel(Gene, "Target"))
-
-fit = lmer(Ct ~ Gene*Group + Concentration + (1 | Sample), data = df2)
+fit = lmer(Ct ~ Gene*Group*Concentration + (1 | Sample), data = df2)
 
 summary(fit)
 
@@ -138,4 +190,11 @@ confint(fit)
 standardize_parameters(fit)
 
 simulateResiduals(fittedModel = fit, plot = TRUE)
+
+# df1 = df %<>%
+#   mutate(dCt = Target - Reference)
+# 
+# t.test(dCt ~ Group, data = df1)
+# 
+# wilcox.test(dCt ~ Group, data = df1)
 ```
