@@ -5,15 +5,15 @@ format:
     df-print: paged
 ---
 
-- https://cran.r-project.org/web/packages/pcr/vignettes/qpcr_analysis.html
-- https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-7-85
-- https://www.sigmaaldrich.com/US/en/technical-documents/technical-article/genomics/qpcr/data-analysis
-- https://bitesizebio.com/24894/4-easy-steps-to-analyze-your-qpcr-data-using-double-delta-ct-analysis/
-- https://www.nature.com/articles/nprot.2008.73
-- http://satqpcr.sophia.inra.fr/
-- https://academic.oup.com/clinchem/article/55/4/611/5631762
-- https://www.researchgate.net/post/when_performing_a_stastical_analysis_on_qPCR_data_where_do_you_apply_ANOVA_or_TTest_on_dct_values_or_fold_change
-- https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-1949-5
+-   https://cran.r-project.org/web/packages/pcr/vignettes/qpcr_analysis.html
+-   https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-7-85
+-   https://www.sigmaaldrich.com/US/en/technical-documents/technical-article/genomics/qpcr/data-analysis
+-   https://bitesizebio.com/24894/4-easy-steps-to-analyze-your-qpcr-data-using-double-delta-ct-analysis/
+-   https://www.nature.com/articles/nprot.2008.73
+-   http://satqpcr.sophia.inra.fr/
+-   https://academic.oup.com/clinchem/article/55/4/611/5631762
+-   https://www.researchgate.net/post/when_performing_a\_stastical_analysis_on_qPCR_data_where_do_you_apply_ANOVA_or_TTest_on_dct_values_or_fold_change
+-   https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-1949-5
 
 ```{r}
 #| output: false
@@ -27,6 +27,7 @@ library(lme4)
 library(lmerTest)
 library(DHARMa)
 library(effectsize)
+library(marginaleffects)
 ```
 
 ```{r}
@@ -62,20 +63,6 @@ pcr_test(ct1,
          reference_gene = 'GAPDH',
          reference_group = 'brain',
          test = "lm")
-```
-
-```{r}
-ct1 %<>% mutate(group = group_var)
-
-ct1
-
-ct1 %>% group_by(group) %>%
-  summarize(c_myc.mean = mean(c_myc),
-            c_myc.sd = sd(c_myc),
-            GAPDH.mean = mean(GAPDH),
-            GAPDH.sd = sd(GAPDH),
-            dct.mean = c_myc.mean - GAPDH.mean,
-            dct.sd = sqrt(c_myc.sd^2 + GAPDH.sd^2))
 ```
 
 ```{r}
@@ -115,17 +102,6 @@ pcr_test(ct2,
 ```
 
 ```{r}
-ct2 %<>% mutate(group = group_var)
-
-ct2
-
-ct2 %>%
-  mutate(dct = c_myc - GAPDH) %>%
-  group_by(group) %>%
-  summarize(dct.mean = mean(dct), dct.sd = sd(dct))
-```
-
-```{r}
 # locate and read data
 ct4 = read.csv(system.file('extdata', 'ct4.csv', package = 'pcr'))
 
@@ -159,11 +135,11 @@ pcr_test(ct4,
 ```
 
 ```{r}
-ct4 %<>% mutate(group = group_var)
+df = ct4 %>% mutate(group = group_var)
 
-ct4
+df
 
-ct4 %>%
+df %>%
   group_by(group) %>%
   summarize(target.mean = mean(target),
             target.sd = sd(target),
@@ -171,4 +147,16 @@ ct4 %>%
             ref.sd = sd(ref),
             dct.mean = target.mean - ref.mean,
             dct.sd = sqrt(target.sd^2 + ref.sd^2))
+```
+
+```{r}
+df %<>% mutate(dct = target - ref, exp = fct_relevel(group, "control"))
+
+fit = lm(dct ~ exp, data = df)
+
+summary(fit) %>% tidy
+```
+
+```{r}
+avg_comparisons(fit, df =  insight::get_df(fit)) %>% tidy
 ```
