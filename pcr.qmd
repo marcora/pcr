@@ -1,6 +1,8 @@
 ---
 title: "qPCR data analysis using R"
-output: html_notebook
+format:
+  html:
+    df-print: paged
 ---
 
 - https://cran.r-project.org/web/packages/pcr/vignettes/qpcr_analysis.html
@@ -13,9 +15,8 @@ output: html_notebook
 - https://www.researchgate.net/post/when_performing_a_stastical_analysis_on_qPCR_data_where_do_you_apply_ANOVA_or_TTest_on_dct_values_or_fold_change
 - https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-1949-5
 
-
-
-```{r message=FALSE, warning=FALSE, results='hide'}
+```{r}
+#| output: false
 library(tidyverse)
 library(magrittr)
 library(janitor)
@@ -170,31 +171,4 @@ ct4 %>%
             ref.sd = sd(ref),
             dct.mean = target.mean - ref.mean,
             dct.sd = sqrt(target.sd^2 + ref.sd^2))
-```
-
----
-
-```{r}
-df = read_xlsx("ct4.xlsx")
-
-df
-
-fit = lmer(Ct ~ Gene*Group*Concentration + (1 | Sample), data = df2)
-
-summary(fit)
-
-tidy(fit)
-
-confint(fit)
-
-standardize_parameters(fit)
-
-simulateResiduals(fittedModel = fit, plot = TRUE)
-
-# df1 = df %<>%
-#   mutate(dCt = Target - Reference)
-# 
-# t.test(dCt ~ Group, data = df1)
-# 
-# wilcox.test(dCt ~ Group, data = df1)
 ```
