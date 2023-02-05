@@ -154,7 +154,7 @@ df %<>% mutate(dct = target - ref, exp = fct_relevel(group, "control"))
 
 fit = lm(dct ~ exp, data = df)
 
-summary(fit) %>% tidy
+fit %>% tidy
 ```
 
 ```{r}
